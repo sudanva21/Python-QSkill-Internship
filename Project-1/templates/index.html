@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Operations - Neo Mode</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: black;
+            font-family: 'Courier New', Courier, monospace;
+            color: #0f0;
+            overflow-x: hidden;
+        }
+
+        #matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .container {
+            position: relative;
+            max-width: 900px;
+            margin: 40px auto;
+            background: rgba(0, 20, 0, 0.85);
+            padding: 30px;
+            border: 1px solid #0f0;
+            box-shadow: 0 0 20px #0f0;
+            border-radius: 10px;
+            z-index: 1;
+        }
+
+        h1 {
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            text-shadow: 0 0 10px #0f0;
+            margin-bottom: 30px;
+        }
+
+        .matrix-input-section {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .matrix-box {
+            flex: 1;
+            border: 1px solid #005500;
+            padding: 15px;
+            background: rgba(0, 10, 0, 0.9);
+        }
+
+        .matrix-box h3 {
+            margin-top: 0;
+            border-bottom: 1px solid #0f0;
+            padding-bottom: 5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .controls input {
+            width: 50px;
+            background: black;
+            border: 1px solid #0f0;
+            color: #0f0;
+            text-align: center;
+            padding: 5px;
+            font-family: inherit;
+        }
+
+        .controls label {
+            font-size: 0.8em;
+        }
+
+        button.small-btn {
+            padding: 2px 8px;
+            font-size: 0.8em;
+        }
+
+        .grid-container {
+            display: grid;
+            gap: 5px;
+            margin-top: 10px;
+            overflow: auto;
+            max-height: 300px;
+            padding-bottom: 10px;
+        }
+
+        .grid-input {
+            width: 40px;
+            background: #000;
+            border: 1px solid #006400;
+            color: #0f0;
+            padding: 8px;
+            text-align: center;
+            font-family: inherit;
+            font-size: 1.1em;
+            transition: 0.3s;
+        }
+
+        .grid-input:focus {
+            border-color: #0f0;
+            outline: none;
+            box-shadow: 0 0 5px #0f0;
+            background: #002200;
+        }
+
+        .op-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        select {
+            background: black;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            font-family: inherit;
+            cursor: pointer;
+            box-shadow: 0 0 5px #0f0;
+        }
+
+        select:hover {
+            background: #002200;
+        }
+
+        button.main-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: #000;
+            color: #0f0;
+            border: 2px solid #0f0;
+            font-size: 1.5em;
+            font-family: inherit;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.3s;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button.main-btn:hover {
+            background: #0f0;
+            color: #000;
+            box-shadow: 0 0 20px #0f0;
+        }
+
+        .result-box {
+            margin-top: 30px;
+            border-top: 2px dashed #0f0;
+            padding-top: 20px;
+            text-align: center;
+        }
+
+        .result-content {
+            font-size: 1.2em;
+            white-space: pre-wrap;
+            display: inline-block;
+            text-align: left;
+            background: rgba(0, 20, 0, 0.8);
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #0f0;
+        }
+
+        .error {
+            color: #ff3333;
+            text-shadow: 0 0 5px red;
+        }
+
+        /* Hidden textareas for form submission */
+        textarea.hidden {
+            display: none;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 15px;
+                width: auto;
+            }
+
+            .matrix-input-section {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+                letter-spacing: 2px;
+            }
+
+            .controls input {
+                width: 40px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="matrix-bg"></canvas>
+
+    <div class="container">
+        <h1>Matrix Operations</h1>
+
+        <form method="POST" action="/" onsubmit="prepareSubmission()">
+            <div class="matrix-input-section">
+                <div class="matrix-box">
+                    <h3>Matrix A</h3>
+                    <div class="controls">
+                        <label>Rows:</label> <input type="number" id="rowsA" value="2" min="1" max="10"
+                            onchange="updateGrid('A')">
+                        <label>Cols:</label> <input type="number" id="colsA" value="2" min="1" max="10"
+                            onchange="updateGrid('A')">
+                        <button type="button" class="small-btn main-btn"
+                            style="width:auto; font-size:0.8em; padding:5px;" onclick="randomize('A')">RND</button>
+                        <button type="button" class="small-btn main-btn"
+                            style="width:auto; font-size:0.8em; padding:5px;" onclick="clearGrid('A')">CLR</button>
+                    </div>
+                    <div id="gridA" class="grid-container"></div>
+                    <textarea name="matrix_a" id="real_matrix_a" class="hidden">{{ matrix_a }}</textarea>
+                </div>
+
+                <div class="matrix-box">
+                    <h3>Matrix B</h3>
+                    <div class="controls">
+                        <label>Rows:</label> <input type="number" id="rowsB" value="2" min="1" max="10"
+                            onchange="updateGrid('B')">
+                        <label>Cols:</label> <input type="number" id="colsB" value="2" min="1" max="10"
+                            onchange="updateGrid('B')">
+                        <button type="button" class="small-btn main-btn"
+                            style="width:auto; font-size:0.8em; padding:5px;" onclick="randomize('B')">RND</button>
+                        <button type="button" class="small-btn main-btn"
+                            style="width:auto; font-size:0.8em; padding:5px;" onclick="clearGrid('B')">CLR</button>
+                    </div>
+                    <div id="gridB" class="grid-container"></div>
+                    <textarea name="matrix_b" id="real_matrix_b" class="hidden">{{ matrix_b }}</textarea>
+                </div>
+            </div>
+
+            <div class="op-section">
+                <select name="operation" id="operation">
+                    <option value="add" {% if operation=='add' %}selected{% endif %}>[ + ] ADDITION</option>
+                    <option value="sub" {% if operation=='sub' %}selected{% endif %}>[ - ] SUBTRACTION</option>
+                    <option value="mul" {% if operation=='mul' %}selected{% endif %}>[ * ] MULTIPLICATION</option>
+                    <option value="transpose" {% if operation=='transpose' %}selected{% endif %}>[ T ] TRANSPOSE (A)
+                    </option>
+                    <option value="det" {% if operation=='det' %}selected{% endif %}>[ |A| ] DETERMINANT (A)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="main-btn">Execute Operation</button>
+        </form>
+
+        {% if error %}
+        <div class="result-box">
+            <h3 class="error">SYSTEM ERROR</h3>
+            <div class="result-content error">{{ error }}</div>
+        </div>
+        {% endif %}
+
+        {% if result %}
+        <div class="result-box">
+            <h3>CALCULATION COMPLETE</h3>
+            <div class="result-content">{{ result }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Matrix Rain Effect
+        const canvas = document.getElementById('matrix-bg');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const nums = '0123456789';
+        const alphabet = katakana + latin + nums;
+
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+
+        const rainDrops = [];
+        for (let x = 0; x < columns; x++) {
+            rainDrops[x] = 1;
+        }
+
+        const draw = () => {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#0F0';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < rainDrops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    rainDrops[i] = 0;
+                }
+                rainDrops[i]++;
+            }
+        };
+        setInterval(draw, 30);
+
+        window.onresize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        // Grid Logic
+        function createGrid(id, rows, cols, values = null) {
+            const grid = document.getElementById('grid' + id);
+            grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            grid.innerHTML = '';
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'grid-input';
+                    input.step = 'any';
+                    input.placeholder = '0';
+
+                    if (values && values[i] && values[i][j] !== undefined) {
+                        input.value = values[i][j];
+                    }
+
+                    grid.appendChild(input);
+                }
+            }
+        }
+
+        function updateGrid(id) {
+            const rows = document.getElementById('rows' + id).value;
+            const cols = document.getElementById('cols' + id).value;
+            // Try to preserve existing values? For now, just reset or maybe I can implement preserve if I have time. 
+            // Simple version: clear.
+            createGrid(id, rows, cols);
+        }
+
+        function randomize(id) {
+            const grid = document.getElementById('grid' + id);
+            constinputs = grid.querySelectorAll('input');
+            const inputs = grid.getElementsByTagName('input');
+            for (let input of inputs) {
+                input.value = Math.floor(Math.random() * 20) - 10; // -10 to 10
+            }
+        }
+
+        function clearGrid(id) {
+            const grid = document.getElementById('grid' + id);
+            const inputs = grid.getElementsByTagName('input');
+            for (let input of inputs) {
+                input.value = '';
+            }
+        }
+
+        function serializeGrid(id) {
+            const rows = document.getElementById('rows' + id).value;
+            const cols = document.getElementById('cols' + id).value;
+            const grid = document.getElementById('grid' + id);
+            const inputs = grid.getElementsByTagName('input');
+
+            let matrixBox = [];
+            let index = 0;
+
+            // Build rows
+            for (let r = 0; r < rows; r++) {
+                let rowVals = [];
+                for (let c = 0; c < cols; c++) {
+                    let val = inputs[index].value || '0'; // default to 0 if empty
+                    rowVals.push(val);
+                    index++;
+                }
+                matrixBox.push(rowVals.join(' '));
+            }
+
+            // Join rows with semicolon
+            return matrixBox.join('; ');
+        }
+
+        function prepareSubmission() {
+            document.getElementById('real_matrix_a').value = serializeGrid('A');
+            document.getElementById('real_matrix_b').value = serializeGrid('B');
+        }
+
+        // Initialize with default or previous values if present
+        window.onload = function () {
+            // Here we could try to parse the textarea value back to grid
+            // But simply initializing a 2x2 is fine for fun
+            createGrid('A', 2, 2);
+            createGrid('B', 2, 2);
+
+            // Advanced: If matrix_a has value from server re-render it. 
+            // (Parsing "1 2; 3 4" back to grid)
+            const initA = document.getElementById('real_matrix_a').value;
+            if (initA) loadMatrix('A', initA);
+
+            const initB = document.getElementById('real_matrix_b').value;
+            if (initB) loadMatrix('B', initB);
+        };
+
+        function loadMatrix(id, str) {
+            if (!str) return;
+            try {
+                const rowsArr = str.split(';');
+                const rowsCount = rowsArr.length;
+                const colsCount = rowsArr[0].trim().split(/\s+/).length;
+
+                document.getElementById('rows' + id).value = rowsCount;
+                document.getElementById('cols' + id).value = colsCount;
+
+                // Parse values
+                let values = [];
+                for (let rowStr of rowsArr) {
+                    values.push(rowStr.trim().split(/\s+/));
+                }
+
+                createGrid(id, rowsCount, colsCount, values);
+            } catch (e) {
+                console.error("Error loading matrix", e);
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>
